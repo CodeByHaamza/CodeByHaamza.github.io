@@ -40,9 +40,19 @@ jobs:
 
       - name: Verifier que la page n'est pas vide
         run: |
+          # Ce qui doit etre vrai quelle que soit la vue par defaut : le
+          # point de montage et le bundle construit. La verification
+          # precedente cherchait le champ du terminal, qui a cesse d'exister
+          # dans index.html le jour ou la vue classique est devenue le
+          # defaut ; elle a bloque le deploiement, ce qui etait son role,
+          # mais sur un invariant perime.
           test -s dist/index.html
-          grep -q "saisie" dist/index.html
-          echo "index.html present et complet"
+          grep -q 'id="app"' dist/index.html
+          grep -qE 'assets/index-[A-Za-z0-9_-]+\.js' dist/index.html
+          # Pas `test -s dist/assets/*.js` : le glob passerait plusieurs
+          # arguments a test des que Vite decoupe le bundle.
+          test "$(find dist/assets -name '*.js' -size +1k | wc -l)" -ge 1
+          echo "index.html monte l'application et reference son bundle"
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
