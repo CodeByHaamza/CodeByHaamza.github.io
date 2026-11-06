@@ -1,0 +1,114 @@
+/* Palette Catppuccin Mocha, la meme que mon README de profil : les deux
+   doivent se lire comme un seul objet. */
+:root {
+  --fond: #11111b;
+  --texte: #cdd6f4;
+  --sourdine: #7f849c;
+  --faible: #45475a;
+  --bleu: #89b4fa;
+  --vert: #a6e3a1;
+  --mauve: #cba6f7;
+  --jaune: #f9e2af;
+  --rouge: #f38ba8;
+  --cyan: #00e5ff;
+  --magenta: #ff2e63;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+          "Liberation Mono", "DejaVu Sans Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--fond); }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 24px clamp(14px, 4vw, 48px) 40vh;
+  background:
+    radial-gradient(120% 70% at 50% 0%, #181828 0%, var(--fond) 70%),
+    var(--fond);
+  color: var(--texte);
+  font: 14px/1.65 var(--mono);
+  /* La trame de points reprend le traitement Spider-Verse de l'en-tete
+     de mon profil, en beaucoup plus discret. */
+  background-image: radial-gradient(var(--faible) 0.9px, transparent 1px);
+  background-size: 7px 7px;
+  background-attachment: fixed;
+}
+
+#terminal { max-width: 92ch; margin: 0 auto; }
+
+.ligne { margin: 0; white-space: pre-wrap; word-break: break-word; }
+.echo { margin-top: 1.1em; }
+.sourdine { color: var(--sourdine); }
+.erreur { color: var(--rouge); }
+.titre { color: var(--jaune); font-weight: 700; }
+.section { color: var(--mauve); letter-spacing: .08em; margin-top: .4em; }
+.dossier { color: var(--bleu); }
+.fichier { color: var(--texte); }
+.barre { color: var(--vert); }
+.u { color: var(--bleu); }
+.w { color: var(--jaune); }
+
+a { color: var(--bleu); text-underline-offset: 3px; }
+a:hover { color: var(--cyan); }
+
+/* La banniere, avec l'aberration chromatique de la DA Spider-Verse.
+   Les deux copies decalees sont posees par ::before et ::after a partir
+   de data-texte, pour ne pas tripler le markup. */
+.banniere {
+  position: relative;
+  /* Cree un contexte d'empilement : sans lui, les calques en z-index -1
+     passent derriere le fond de la page et deviennent invisibles. */
+  z-index: 0;
+  isolation: isolate;
+  margin: 0 0 .2em;
+  font: inherit;
+  line-height: 1.05;
+  color: #f4f4ff;
+  white-space: pre;
+  overflow-x: auto;
+}
+.banniere::before,
+.banniere::after {
+  content: attr(data-texte);
+  position: absolute;
+  inset: 0;
+  white-space: pre;
+  pointer-events: none;
+}
+.banniere::before { color: var(--cyan); transform: translate(-2px, 1px); z-index: -1; }
+.banniere::after { color: var(--magenta); transform: translate(2px, -1px); z-index: -1; }
+
+.media { margin: .8em 0 1.1em; max-width: 46ch; }
+.media img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--faible);
+  border-radius: 6px;
+}
+.media figcaption {
+  margin-top: .45em;
+  color: var(--sourdine);
+  font-size: .86em;
+  line-height: 1.5;
+}
+
+#barreSaisie { display: flex; align-items: baseline; gap: 0; margin-top: 1.1em; }
+#invite { white-space: pre; }
+
+#saisie {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--texte);
+  font: inherit;
+  caret-color: var(--texte);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}

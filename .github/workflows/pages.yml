@@ -1,0 +1,60 @@
+name: Deployer le site
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Tous les jours : les chiffres GitHub sont figes au build, donc sans
+    # reconstruction periodique le compteur de commits vieillirait.
+    - cron: "41 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Construire
+        env:
+          # outils/chiffres.mjs appelle l'API via gh avant le build.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_LOGIN: ${{ github.repository_owner }}
+        run: npm run build
+
+      - name: Verifier que la page n'est pas vide
+        run: |
+          test -s dist/index.html
+          grep -q "saisie" dist/index.html
+          echo "index.html present et complet"
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deployer:
+    needs: construire
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - id: deploiement
+        uses: actions/deploy-pages@v4

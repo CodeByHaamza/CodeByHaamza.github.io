@@ -1,8 +1,23 @@
-# hamzakarrouchi.github.io
+# codebyhaamza.github.io
 
-Page d'accueil de mon site GitHub Pages.
+Mon portfolio, sous forme de terminal. On navigue en tapant des commandes :
+`help`, `ls`, `cd`, `cat`, `tree`, `open`, `stats`, `neofetch`.
 
-Elle redirige vers le site du cours **R506 — Sensibilisation à la programmation
-multimédia** : <https://hamzakarrouchi.github.io/R506/>
+- **`src/contenu/donnees.ts`** — tout le contenu, en français et en anglais.
+  Ajouter un projet ici le fait apparaître sous `/projects` sans toucher au
+  shell.
+- **`src/fs.ts`** — le système de fichiers virtuel, construit depuis ce
+  contenu.
+- **`src/terminal.ts`** — l'analyse des commandes et leur exécution.
+- **`outils/chiffres.mjs`** — appelle l'API GitHub avant chaque build et
+  écrit `data/github.json`. Les chiffres sont donc figés à la construction :
+  aucune clé exposée, aucun quota consommé chez le visiteur, et la page
+  s'affiche même si GitHub est en panne. Le workflow reconstruit chaque jour.
 
-Code du cours : <https://github.com/HamzaKarrouchi/R506>
+Les liens profonds passent par le fragment d'URL : `#cat /projects/kagami/README.md`
+ouvre directement l'étude de cas.
+
+```sh
+npm install
+npm run dev
+```
