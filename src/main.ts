@@ -36,6 +36,17 @@ const TITRES: Record<string, Record<Langue, string>> = {
   "/contact": { fr: "Contact", en: "Contact" },
 };
 
+/** Retire la barre oblique finale, sauf pour la racine.
+ *
+ * GitHub Pages redirige /projets vers /projets/ : les adresses de type
+ * dossier prennent une barre finale. Sans cette normalisation, le routeur
+ * ne reconnaissait plus la page et affichait sa propre 404 a quelqu'un qui
+ * avait pourtant tape la bonne adresse. */
+function normaliserChemin(c: string): string {
+  const n = c.replace(/\/+$/, "");
+  return n === "" ? "/" : n;
+}
+
 function contenuPour(chemin: string, l: Langue): HTMLElement {
   if (chemin === "/") return pageAccueil(l);
   if (chemin === "/projets") return pageProjets(l);
@@ -76,7 +87,8 @@ function entrerTerminal(): void {
   window.scrollTo({ top: 0 });
 }
 
-function rendre(chemin: string, defiler = true): void {
+function rendre(brut: string, defiler = true): void {
+  const chemin = normaliserChemin(brut);
   demonterTerminal?.();
   demonterTerminal = null;
   document.body.dataset.vue = "site";
@@ -115,7 +127,7 @@ function changerLangue(n: Langue): void {
 }
 
 function naviguer(href: string): void {
-  if (href === location.pathname) return;
+  if (normaliserChemin(href) === normaliserChemin(location.pathname)) return;
   history.pushState(null, "", href);
   rendre(href);
 }

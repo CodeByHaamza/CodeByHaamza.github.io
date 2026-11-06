@@ -75,9 +75,11 @@ export function barreNav(
   const nav = el("nav", "nav");
   for (const item of NAV) {
     const a = lien(item.href, l === "fr" ? item.fr : item.en);
+    // `chemin` est deja normalise par le routeur, mais on compare sur des
+    // segments entiers : sinon /projets-archives allumerait /projets.
     const actif = item.href === "/"
       ? chemin === "/"
-      : chemin.startsWith(item.href);
+      : chemin === item.href || chemin.startsWith(item.href + "/");
     if (actif) a.setAttribute("aria-current", "page");
     nav.append(a);
   }
