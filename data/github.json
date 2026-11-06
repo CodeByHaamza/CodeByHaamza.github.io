@@ -1,41 +1,41 @@
 {
   "releve": "2026-11-06",
-  "commits": 3367,
+  "commits": 3368,
   "prs": 524,
   "etoiles": 102,
   "depots": 8,
   "abonnes": 7,
-  "contributions": 3966,
+  "contributions": 3967,
   "serie": 53,
   "serieRecord": 53,
   "langages": [
     {
       "nom": "javascript",
-      "part": 39.09366871915046
+      "part": 38.96198106980306
     },
     {
       "nom": "python",
-      "part": 17.013680128407227
+      "part": 16.935701994002525
     },
     {
       "nom": "html",
-      "part": 13.669450327443014
+      "part": 13.593612331627225
     },
     {
       "nom": "php",
-      "part": 11.478139436899607
+      "part": 11.42553212954627
     },
     {
       "nom": "css",
-      "part": 9.988625733544868
+      "part": 9.980329486505678
     },
     {
       "nom": "typescript",
-      "part": 7.771530598369427
+      "part": 8.122452009135536
     },
     {
       "nom": "autres",
-      "part": 0.9849050561854014
+      "part": 0.9803909793797099
     }
   ]
 }

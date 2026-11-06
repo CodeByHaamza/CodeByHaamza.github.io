@@ -50,6 +50,7 @@ const TEXTES = {
       ["whoami", "en un mot"],
       ["fr | en", "changer de langue"],
       ["clear", "nettoyer l'ecran"],
+      ["exit", "revenir au site"],
     ],
     en: [
       ["help", "this list"],
@@ -63,6 +64,7 @@ const TEXTES = {
       ["whoami", "in one word"],
       ["fr | en", "switch language"],
       ["clear", "wipe the screen"],
+      ["exit", "back to the site"],
     ],
   },
   astuce: {
@@ -234,6 +236,11 @@ export function executer(ligne: string, e: Etat): Bloc[] | "clear" {
     e.langue = nom;
     return [t(nom === "fr" ? "Langue : francais." : "Language: English.",
               "sourdine")];
+  }
+  if (nom === "exit" || nom === "quit") {
+    // La vue ecoute cet evenement : elle seule sait se refermer.
+    window.dispatchEvent(new CustomEvent("terminal:sortie", { detail: "exit" }));
+    return [];
   }
   const cmd = CMD[nom];
   if (!cmd) return [t(TEXTES.inconnue[e.langue](nom), "erreur")];

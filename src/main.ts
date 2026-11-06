@@ -1,172 +1,93 @@
-// Le pilote du terminal : amorcage, saisie, historique, rendu.
+// Choisit la vue et la monte.
+//
+// La page classique est le defaut : on arrive sur quelque chose qui se lit
+// sans rien savoir faire. Le terminal est une option, accessible par le
+// bouton, par la touche ~, ou par l'adresse #terminal.
 
 import "./style.css";
-import {
-  cheminTexte, completer, etatInitial, executer, type Etat,
-} from "./terminal";
-import type { Bloc } from "./fs";
+import { rendreClassique } from "./classique";
+import { monterTerminal } from "./vue-terminal";
+import type { Langue } from "./contenu/donnees";
 
-const etat: Etat = etatInitial();
-const ecran = document.getElementById("ecran") as HTMLDivElement;
-const saisie = document.getElementById("saisie") as HTMLInputElement;
-const invite = document.getElementById("invite") as HTMLSpanElement;
-const historique: string[] = [];
-let curseurHisto = -1;
+const app = document.getElementById("app") as HTMLDivElement;
+const CLE_VUE = "vue";
+const CLE_LANGUE = "langue";
 
-const BANNIERE = [
-  "██╗  ██╗ █████╗ ███╗   ███╗███████╗ █████╗ ",
-  "██║  ██║██╔══██╗████╗ ████║╚══███╔╝██╔══██╗",
-  "███████║███████║██╔████╔██║  ███╔╝ ███████║",
-  "██╔══██║██╔══██║██║╚██╔╝██║ ███╔╝  ██╔══██║",
-  "██║  ██║██║  ██║██║ ╚═╝ ██║███████╗██║  ██║",
-  "╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝",
-];
+type Vue = "classique" | "terminal";
 
-function majInvite(): void {
-  invite.innerHTML =
-    `<span class="u">hamza@portfolio</span>:<span class="w">`
-    + (cheminTexte(etat.chemin) || "/") + `</span>$&nbsp;`;
+function langueInitiale(): Langue {
+  const stockee = localStorage.getItem(CLE_LANGUE);
+  if (stockee === "fr" || stockee === "en") return stockee;
+  return navigator.language.startsWith("fr") ? "fr" : "en";
 }
 
-function ligneElement(b: Bloc): HTMLElement {
-  if (b.type === "image") {
-    const fig = document.createElement("figure");
-    fig.className = "media";
-    const img = document.createElement("img");
-    img.src = b.src;
-    img.alt = b.alt;
-    img.loading = "lazy";
-    fig.append(img);
-    if (b.legende) {
-      const cap = document.createElement("figcaption");
-      cap.textContent = b.legende;
-      fig.append(cap);
-    }
-    return fig;
-  }
-  if (b.type === "lien") {
-    const p = document.createElement("p");
-    p.className = "ligne";
-    const a = document.createElement("a");
-    a.href = b.url;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.textContent = b.texte;
-    p.append(a);
-    return p;
-  }
-  const p = document.createElement("p");
-  p.className = "ligne" + (b.classe ? " " + b.classe : "");
-  p.textContent = b.texte || " ";
-  return p;
+function vueInitiale(): Vue {
+  if (location.hash.startsWith("#terminal")) return "terminal";
+  // Un fragment de commande (#cat …) vise forcement le terminal.
+  if (location.hash.length > 1) return "terminal";
+  return localStorage.getItem(CLE_VUE) === "terminal" ? "terminal" : "classique";
 }
 
-function ecrire(blocs: Bloc[]): void {
-  for (const b of blocs) ecran.append(ligneElement(b));
+let langue: Langue = langueInitiale();
+let vue: Vue = vueInitiale();
+let demonterTerminal: (() => void) | null = null;
+
+function majBarre(): void {
+  const b = document.getElementById("bascule") as HTMLButtonElement;
+  b.textContent = vue === "classique"
+    ? (langue === "fr" ? "> terminal" : "> terminal")
+    : (langue === "fr" ? "× quitter le terminal" : "× leave the terminal");
+  b.setAttribute("aria-pressed", String(vue === "terminal"));
 }
 
-function ecrireCommande(ligne: string): void {
-  const p = document.createElement("p");
-  p.className = "ligne echo";
-  p.innerHTML =
-    `<span class="u">hamza@portfolio</span>:<span class="w">`
-    + (cheminTexte(etat.chemin) || "/") + `</span>$ `;
-  p.append(document.createTextNode(ligne));
-  ecran.append(p);
-}
-
-function defiler(): void {
-  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-}
-
-function soumettre(ligne: string): void {
-  ecrireCommande(ligne);
-  if (ligne.trim()) historique.unshift(ligne);
-  curseurHisto = -1;
-  const sortie = executer(ligne, etat);
-  if (sortie === "clear") {
-    ecran.replaceChildren();
+function monter(): void {
+  demonterTerminal?.();
+  demonterTerminal = null;
+  app.replaceChildren();
+  document.body.dataset.vue = vue;
+  if (vue === "classique") {
+    rendreClassique(app, langue, () => basculer("terminal"), changerLangue);
   } else {
-    ecrire(sortie);
-    if (sortie.length) ecran.append(ligneElement({ type: "texte", texte: "" }));
+    demonterTerminal = monterTerminal(app, langue, () => basculer("classique"),
+                                      (n) => { langue = n; sauver(); });
   }
-  majInvite();
-  defiler();
+  majBarre();
+  localStorage.setItem(CLE_VUE, vue);
 }
 
-saisie.addEventListener("keydown", (ev) => {
-  if (ev.key === "Enter") {
-    const v = saisie.value;
-    saisie.value = "";
-    soumettre(v);
-  } else if (ev.key === "Tab") {
+function sauver(): void {
+  localStorage.setItem(CLE_LANGUE, langue);
+}
+
+function changerLangue(n: Langue): void {
+  langue = n;
+  sauver();
+  monter();
+}
+
+function basculer(v: Vue): void {
+  vue = v;
+  if (v === "classique" && location.hash) {
+    history.replaceState(null, "", location.pathname);
+  }
+  monter();
+  window.scrollTo({ top: 0 });
+}
+
+document.getElementById("bascule")?.addEventListener("click", () => {
+  basculer(vue === "classique" ? "terminal" : "classique");
+});
+
+// La touche ~ ouvre le terminal, comme dans un jeu. On l'ignore si on est
+// deja en train d'ecrire dans un champ, sinon on ne pourrait plus taper le
+// caractere lui-meme.
+document.addEventListener("keydown", (ev) => {
+  const cible = ev.target as HTMLElement | null;
+  if (cible && (cible.tagName === "INPUT" || cible.tagName === "TEXTAREA")) return;
+  if (ev.key === "~" || (ev.key === "Escape" && vue === "terminal")) {
     ev.preventDefault();
-    saisie.value = completer(saisie.value, etat);
-  } else if (ev.key === "ArrowUp") {
-    ev.preventDefault();
-    if (curseurHisto + 1 < historique.length) {
-      curseurHisto += 1;
-      saisie.value = historique[curseurHisto];
-    }
-  } else if (ev.key === "ArrowDown") {
-    ev.preventDefault();
-    curseurHisto = Math.max(curseurHisto - 1, -1);
-    saisie.value = curseurHisto < 0 ? "" : historique[curseurHisto];
-  } else if (ev.key === "l" && ev.ctrlKey) {
-    ev.preventDefault();
-    ecran.replaceChildren();
+    basculer(vue === "classique" ? "terminal" : "classique");
   }
 });
 
-// Cliquer n'importe ou rend le focus au champ : on ne veut jamais taper
-// dans le vide sur un site dont le seul moyen d'interaction est le clavier.
-document.addEventListener("click", () => {
-  if (!window.getSelection()?.toString()) saisie.focus();
-});
-
-/** Amorcage : la banniere apparait ligne par ligne, puis l'accueil. */
-async function amorcer(): Promise<void> {
-  const banniere = document.createElement("pre");
-  banniere.className = "banniere";
-  ecran.append(banniere);
-  for (const l of BANNIERE) {
-    banniere.textContent += l + "\n";
-    await new Promise((r) => setTimeout(r, 70));
-  }
-  banniere.dataset.texte = banniere.textContent ?? "";
-  await new Promise((r) => setTimeout(r, 180));
-  ecrire([
-    { type: "texte", texte: "" },
-    {
-      type: "texte",
-      texte: "CS student · ships a project every two weeks · ROM hacker",
-      classe: "sourdine",
-    },
-    { type: "texte", texte: "" },
-    {
-      type: "texte",
-      texte: "Tape « help » pour la liste des commandes, « en » for English.",
-    },
-    { type: "texte", texte: "" },
-  ]);
-  majInvite();
-  saisie.focus();
-  rejouerLien();
-}
-
-/** Les commandes du fragment d'URL, separees par « ; ».
- *
- * Un terminal n'a pas d'adresses : impossible d'envoyer quelqu'un sur une
- * etude de cas precise. Le fragment repare ca — codebyhaamza.github.io/
- * #cat /projects/kagami/README.md ouvre directement la bonne page. */
-function rejouerLien(): void {
-  const brut = decodeURIComponent(location.hash.replace(/^#/, "")).trim();
-  if (!brut) return;
-  for (const c of brut.split(";").map((x) => x.trim()).filter(Boolean)) {
-    soumettre(c);
-  }
-}
-
-window.addEventListener("hashchange", rejouerLien);
-
-void amorcer();
+monter();
