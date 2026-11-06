@@ -52,15 +52,14 @@ jobs:
           # Pas `test -s dist/assets/*.js` : le glob passerait plusieurs
           # arguments a test des que Vite decoupe le bundle.
           test "$(find dist/assets -name '*.js' -size +1k | wc -l)" -ge 1
-          echo "index.html monte l'application et reference son bundle"
-
-      - name: 404 = index, pour les vraies URL
-        run: |
-          # Le site utilise de vraies adresses (/projets/kagami) et non des
-          # fragments. GitHub Pages sert 404.html pour tout chemin inconnu :
-          # en y mettant index.html, l'application demarre et son routeur
-          # lit location.pathname. Sans ca, un lien partage tombe en 404.
-          cp dist/index.html dist/404.html
+          # Chaque adresse doit avoir son fichier, sinon Pages repond 404
+          # et la page n'est ni indexee ni previsualisee quand on la
+          # partage. postbuild les ecrit ; on verifie qu'il l'a fait.
+          for p in projets a-propos contact projets/kagami; do
+            test -s "dist/$p/index.html" || { echo "manque: $p"; exit 1; }
+          done
+          test -s dist/404.html
+          echo "toutes les routes ont leur fichier"
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
