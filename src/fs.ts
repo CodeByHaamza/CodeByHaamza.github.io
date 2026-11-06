@@ -46,7 +46,7 @@ function etudeDeCas(p: (typeof PROJETS)[number], l: Langue): Bloc[] {
     t(""),
   ];
   enTete[l].forEach((h, i) => {
-    out.push(t(h, "section"));
+    out.push(t(h, "section-t"));
     out.push(...decouper(champs[i][l], 74).map((x) => t(x)));
     out.push(t(""));
   });

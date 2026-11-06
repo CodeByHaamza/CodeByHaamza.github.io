@@ -54,6 +54,14 @@ jobs:
           test "$(find dist/assets -name '*.js' -size +1k | wc -l)" -ge 1
           echo "index.html monte l'application et reference son bundle"
 
+      - name: 404 = index, pour les vraies URL
+        run: |
+          # Le site utilise de vraies adresses (/projets/kagami) et non des
+          # fragments. GitHub Pages sert 404.html pour tout chemin inconnu :
+          # en y mettant index.html, l'application demarre et son routeur
+          # lit location.pathname. Sans ca, un lien partage tombe en 404.
+          cp dist/index.html dist/404.html
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

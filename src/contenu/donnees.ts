@@ -99,7 +99,7 @@ export const PROJETS: Projet[] = [
   },
   {
     id: "grimoire",
-    nom: "Grimoire du Coeur",
+    nom: "Grimoire du Cœur",
     url: "https://github.com/Grimoire-du-Coeur",
     annee: "2024 →",
     pile: ["python", "psp eboot", "reverse engineering", "xdelta"],
